@@ -6,22 +6,21 @@ ARG ROOTFS_URL="https://cdimage.ubuntu.com/releases/resolute/snapshot-4/ubuntu-2
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
-        curl \
-        xz-utils && \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /rootfs
 
-# Download the WSL image (it's a tar.xz archive with .wsl extension)
-RUN curl -L "$ROOTFS_URL" -o rootfs.tar.xz && \
+# Download and extract gzip archive
+RUN curl -L "$ROOTFS_URL" -o rootfs.tar.gz && \
     mkdir extracted && \
-    tar -xJf rootfs.tar.xz -C extracted
+    tar -xzf rootfs.tar.gz -C extracted
 
 # ---- Final stage ----
 FROM scratch
 
-# Copy extracted root filesystem into /
 COPY --from=builder /rootfs/extracted/ /
 
-# Set a default command
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 CMD ["/bin/bash"]
